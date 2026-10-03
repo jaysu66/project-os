@@ -1,72 +1,117 @@
-# os — project-os 共享 Skill
+# project-os
 
-`os` 是一个轻量的项目协作操作系统：把项目状态、并行方向、会话交接和阶段收口
-写进项目仓库，让多个 Agent 或多个会话围绕同一份 SSOT 协作。它不绑定某个模型、IDE、
-云服务或公司知识库。
+让 AI Agent 记住你的项目:新开一个会话、换一个 Agent,读一页就能接着干,还记得你纠正过它什么。
+多个窗口同时干活时,互相不覆盖。
 
-## 它能做什么
+> **English**: Two plain-Markdown skills for Claude Code, Codex and other agents.
+> `project-memory` keeps a project's memory in `.agent-memory/` (one entry page, preferences, decisions,
+> gotchas, session logs) so any new session catches up by reading one page.
+> `os` adds multi-session collaboration on top (locks, commit letters, mailboxes, charters, compaction snapshots).
+> No database, no service — just Markdown, Git and optional Node.js scripts.
 
-- `/os 启动`：读取项目 SSOT，输出归位报告，确认当前分支、锁和并行方向。
-- `/os 接入`：在项目中创建 `.agent-memory` 状态骨架（幂等，已有文件不覆盖）。
-- `/os 开方向 <名称>`：为独立工作方向准备 charter 和隔离工作区约定。
-- `/os 信箱`、`/os 广播`、`/os 联动`：用 Markdown 文件传递请求、讨论和通知。
-- `/os 收割`：由主负责人汇总各方向进展、验收交付物并刷新状态。
-- `/os 体检`：运行只读健康检查，查看 SSOT 锚定、分叉状态和锁。
-- `/os 清洗`、`/os 纪元`、`/os 矩阵`：按需治理记忆、封存重大换代、读取项目自有注册表。
+## 两层,按需装
+
+| | project-memory(记忆层) | os(协作层) |
+|---|---|---|
+| 解决什么 | 每次新开 AI 都要重讲一遍项目;纠正过的错下次又犯 | 同时开好几个窗口、好几个 Agent,互相覆盖、互不知情 |
+| 适合谁 | 任何用 Agent 做长期项目的人 | 经常并行开多个会话的人 |
+| 怎么用 | 说"帮我记录一下这个项目"、"上次做到哪了"、"今天结束了记一下" | 说 `/os 启动`、`/os 接入`、`/os 收割` 等 |
+| 依赖 | 无 | 建立在 project-memory 的文件之上(没装也能跑,只是少了记忆文件) |
+
+只想让 AI 记住项目 → 装 `skills/project-memory`。经常同时开好几个窗口 → 两个都装。
 
 ## 安装
 
-将本目录复制到目标 Agent 的 Skill 目录，并确保目录名保持为 `os`。只使用 `SKILL.md`
-也可以；`assets/`、`references/` 和 `scripts/` 是完整流程所需的配套文件。
+把需要的文件夹复制(或链接)到你的 Agent 的 Skill 目录,文件夹名保持不变:
 
-前置条件：
+| Agent | Skill 目录 |
+|---|---|
+| Claude Code | `~/.claude/skills/` |
+| Codex | `~/.codex/skills/` |
+| 通用 Agents | `~/.agents/skills/` |
 
-- Node.js 18 或更高版本（仅运行辅助脚本时需要）；
-- Git（只有使用 Git 锚定、分支和 worktree 检查时需要）；
-- 一个可写的项目目录。
-
-## 最小使用示例
-
-在项目根目录运行：
-
-```powershell
-node path/to/os/scripts/init.cjs
-node path/to/os/scripts/os-doctor.cjs
+```bash
+git clone https://github.com/jaysu66/project-os.git
+cp -r project-os/skills/project-memory ~/.claude/skills/
+cp -r project-os/skills/os ~/.claude/skills/        # 可选
 ```
 
-然后让 Agent 读取本 Skill 并执行 `/os 启动`。初始化脚本只会创建缺失的 `.agent-memory`
-文件和目录，不会覆盖已有项目状态。
+两个都装时,请放在同一个 Skill 目录下(os 通过同级目录找到 project-memory)。
+脚本需要 Node.js 18+;不装 Node.js 也能用,Agent 会按文档手动建文件。
 
-## 文件说明
+## 三句话用起来
 
-- `SKILL.md`：命令路由和不可违反的协作边界。
-- `references/`：每个命令的详细流程，按需读取，不要求一次加载全部内容。
-- `assets/`：PROJECT-STATE、charter 和多会话协议模板。
-- `scripts/init.cjs`：幂等初始化 SSOT 骨架。
-- `scripts/os-doctor.cjs`：只读健康检查，不修复、不删除。
-- `scripts/precompact-snapshot.cjs`：可选的压缩前 Git 状态快照脚本。
+1. 在项目里对 Agent 说:**"帮我记录一下这个项目"** —— 它问你最多 7 个问题,建好记忆文件夹。
+2. 收工时说:**"今天结束了,记一下"** —— 它写会话日志,记下新的决定、坑和你的纠正。
+3. 下次新开会话说:**"上次做到哪了"** —— 它读一页,给你 200 字以内的上手简报。
+
+## 每个文件存什么、为什么
+
+```
+.agent-memory/
+├── PROJECT-STATE.md   必建 · 唯一入口:现在到哪、待办、文档地图(≤60 行)
+├── CONTEXT.md         必建 · 很少变的:项目是什么、怎么跑、硬约束
+├── PROTOCOL.md        必建 · 开工读什么、收工写什么
+├── PREFERENCES.md     按需 · 你在本项目纠正过它什么
+├── DECISIONS.md       按需 · 决定:索引 + 详条,写明"除非什么情况否则不推翻"
+├── GOTCHAS.md         按需 · 坑:索引 + 详条,出现 3 次升级为硬约束
+├── RUNBOOK.md         按需 · 部署、回滚、报错速查
+├── SESSIONS/          按需 · 每次收工一份
+└── ARCHIVE/           按需 · 30 天前的会话,一份一行
+```
+
+| 文件 | 存什么 | 为什么 |
+|---|---|---|
+| `PROJECT-STATE.md` | 一句话、当前状态、正在做、待办、最近 3 次会话、文档地图 | 新会话第一个读,10 秒知道该读什么 |
+| `CONTEXT.md` | 项目是什么、怎么跑、技术栈、外部服务、硬约束 | 不常变的和常变的分开,不容易过时 |
+| `PREFERENCES.md` | 你说过的"不要这样""我更喜欢""以后都这样",带日期和出处 | Agent 最该记住的,是你纠正过它什么 |
+| `DECISIONS.md` | 背景、决定、没选的方案和理由、代价、**除非什么情况否则不推翻** | 防止下一个 Agent 推翻想清楚的决定 |
+| `GOTCHAS.md` | 现象、根因、解法、涉及文件、可重跑的命令、出现次数 | 同一个坑不踩第二次;踩 3 次变成规矩 |
+| `SESSIONS/` | 目标、完成、问题和解法、遗留、新发现、偏好信号 | 接着干时只读最新 1~2 份 |
+| `ARCHIVE/` | 旧会话一行摘要 | 不删,但不再占读取额度 |
+
+装了 os 后,同一个文件夹里还会多出:`MULTI-SESSION-PROTOCOL.md`(协作规范)、`charters/`(并行方向说明页)、
+`mailbox/`(commit 信、会话间传话、广播)、`locks/`(谁在改主线)、`epochs/`(大重构封存)、
+`COMPACT-SNAPSHOT-<分支>.md`(压缩前快照)。
+
+## 设计来源:照着 Claude 的记忆机制
+
+1. **先读一页,再按需读**:像 CLAUDE.md 和记忆索引,入口短、正文用到再读,省 token 也不被旧内容带偏。
+2. **记你纠正过什么**:最值得长期记住的不是项目细节,而是用户的纠正和偏好,而且要写"为什么"。
+3. **只记查不到的**:git 能查到的(改了哪几行、提交历史)不记;记 git 记不住的——你拍板了什么、为什么。
+
+另外两条是踩坑后加的:**靠 Agent 自觉的整理从来不会发生**,所以归档、升级做成明确的命令和脚本;
+**入口要放在 Agent 一定会读的地方**,所以初始化时在 `CLAUDE.md`、`AGENTS.md` 末尾写一句指路。
+
+## 目录
+
+```
+skills/
+├── project-memory/
+│   ├── SKILL.md          触发条件 + 4 个动作:初始化 / 收工 / 上手 / 整理
+│   ├── references/       每个动作一页 + 文件说明
+│   ├── assets/           7 个模板 + PROTOCOL.md
+│   └── scripts/          init.cjs / tidy.cjs / precompact-snapshot.cjs
+└── os/
+    ├── SKILL.md          /os 动词路由:启动 / 接入 / 接管 / 收割 / 信箱 / 广播 / 开方向 / 清洗 / 纪元 / 体检 / 联动 / 矩阵
+    ├── references/       每个动词一页
+    ├── assets/           协作规范、STATE 协作段、charter 模板
+    └── scripts/          init.cjs / os-doctor.cjs
+```
 
 ## 副作用与安全边界
 
-- `init.cjs` 会在当前项目创建 `.agent-memory/`；运行前确认当前目录正确。
-- `os-doctor.cjs` 只读 Git 和文件状态，退出码始终为 0；警告需要人工判断。
-- `precompact-snapshot.cjs` 会在 SSOT 写入快照，其中可能包含本机工作目录和 Git 状态，
-  不应把含私人路径的快照提交到公共仓库。
-- 本 Skill 不读取或上传凭据，不访问预设的公司知识库，也不会自动修改全局 Agent 配置。
-- 高影响写入、删除、发布、发版和状态裁决仍需项目负责人授权。
+- 两个 `init.cjs` 只创建缺失的文件,不覆盖已有内容;会在项目根 `CLAUDE.md`、`AGENTS.md` 末尾追加一段指路(`--no-entry` 可跳过)。
+- `tidy.cjs` 默认只读;加 `--apply` 才写 `ARCHIVE/`,从不删除文件。
+- `os-doctor.cjs` 只读,退出码始终为 0。
+- `precompact-snapshot.cjs` 会写入本机路径和 Git 状态,不要把快照提交到公开仓库。不会自动注册 hook。
+- 不读取或上传凭据,不访问外部服务,不修改全局 Agent 配置。
+- 旧版(v2)的 `INDEX.yaml`、`AGENT_PROTOCOL.md` 仍可读,不会被删除。
 
 ## 卸载
 
-从 Agent 的 Skill 目录删除本 `os` 文件夹即可。它不会自动删除目标项目已经生成的
-`.agent-memory`、charter、信箱或快照；如需清理这些项目数据，请在确认范围后单独处理。
+从 Skill 目录删除 `project-memory`、`os` 文件夹即可。项目里已生成的 `.agent-memory/` 不会被自动删除。
 
-## 适配范围
+## 许可
 
-核心协议是 Markdown + Git + Node.js，可被不同 Agent 宿主实现。入口文件名（如
-`AGENTS.md`、`CLAUDE.md`）、生命周期 hook、全局记忆桶和 MCP 均为可选适配项；缺失时应
-报告“未配置”，不能假设存在。`references/矩阵.md` 只读取用户明确指定或项目 SSOT 下的
-注册表，不包含任何真实组织、客户或产品数据。
-
-## 来源与许可
-
-本 Skill 源自作者个人 project-os 实践的通用化版本。以 MIT 许可证发布，见 [LICENSE](LICENSE)。
+MIT,见 [LICENSE](LICENSE)。

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// precompact-snapshot.cjs — PreCompact hook(全局装一次):压缩前把项目状态确定性落盘。
+// precompact-snapshot.cjs — project-memory 的可选 PreCompact hook(全局装一次):压缩前把项目状态确定性落盘。
 // os v2:锚定优先(git 公共区 project-os.json),cwd .agent-memory 兜底;快照按分支分名
 // COMPACT-SNAPSHOT-<branch>.md,多会话并行互不覆盖。非项目会话毫秒级静默退出。
 // fail-soft:任何错误绝不阻塞压缩。本机铁律:hook 只能 node(bash=WSL 坏)。

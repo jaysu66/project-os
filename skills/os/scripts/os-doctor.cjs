@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // os-doctor.cjs — project-os 健康体检(只读,不修任何东西)。
 // 用法:在项目任意目录 `node <skill-dir>/scripts/os-doctor.cjs`
-// 检查:①锚定有效 ②worktree 分叉副本 ③可选项目入口协议 ④锁状态
+// 检查:①锚定有效 ②worktree 分叉副本 ③可选项目入口协议 ④锁状态 ⑤记忆层文件
 'use strict';
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -64,6 +64,18 @@ if (ssot) {
     const first = (fs.readFileSync(fp, 'utf8').split(/\r?\n/).find(l => l.trim()) || '').slice(0, 60);
     if (ageH > 24) bad(`锁 ${f} 已 ${ageH}h 未更新(疑似遗弃):${first}`);
     else ok(`锁 ${f}(${ageH}h 前):${first}`);
+  }
+}
+
+// ⑤ 记忆层(project-memory):必建文件 + 旧版 INDEX.yaml
+const memDir = ssot || path.join(cwd, '.agent-memory');
+if (fs.existsSync(memDir)) {
+  const missing = ['PROJECT-STATE.md', 'CONTEXT.md', 'PROTOCOL.md'].filter(f => !fs.existsSync(path.join(memDir, f)));
+  if (missing.length) ok('记忆层缺 ' + missing.join('、') + '(可选:说"初始化项目记忆"补齐,不覆盖已有文件)');
+  else ok('记忆层必建文件齐全');
+  if (fs.existsSync(path.join(memDir, 'INDEX.yaml'))) {
+    if (fs.existsSync(path.join(memDir, 'PROJECT-STATE.md'))) ok('旧版 INDEX.yaml 仍在,以 PROJECT-STATE.md 为准(INDEX.yaml 不用删)');
+    else bad('只有旧版 INDEX.yaml、没有 PROJECT-STATE.md:说"初始化项目记忆"按提示迁移');
   }
 }
 
