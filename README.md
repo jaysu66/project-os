@@ -91,7 +91,7 @@ cp -r project-os/skills/os ~/.agents/skills/      # 通用 Agents(可选)
 
 ## Hook(可选,默认关)
 
-不装 hook 也能用:压缩前说一句"收工"(会话中途也行),Agent 会把这次的进展、决定和你的纠正记下来。
+三个 hook,不装也能用:压缩前或告一段落时说一句"收工"(会话中途也行),Agent 会把这次的进展、决定和你的纠正记下来。
 
 想让它自动,把下面这段加进 Claude Code 的 `~/.claude/settings.json`(全局)或项目里的 `.claude/settings.json`,
 路径换成你的 `os` 文件夹位置:
@@ -104,6 +104,9 @@ cp -r project-os/skills/os ~/.agents/skills/      # 通用 Agents(可选)
     ],
     "SessionStart": [
       { "matcher": "startup|resume|compact", "hooks": [{ "type": "command", "command": "node \"C:/Users/you/.claude/skills/os/scripts/sessionstart-nav.cjs\"" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "node \"C:/Users/you/.claude/skills/os/scripts/stop-remind.cjs\"" }] }
     ]
   }
 }
@@ -113,8 +116,9 @@ cp -r project-os/skills/os ~/.agents/skills/      # 通用 Agents(可选)
 |---|---|---|
 | PreCompact | 对话压缩前 | 把时间、最近 5 个提交、未提交改动写进 `COMPACT-SNAPSHOT-<分支>.md`——压缩摘要会丢细节,这份只记客观事实 |
 | SessionStart | 新开、恢复、压缩后 | 自动把状态页前 30 行、偏好提醒、压缩快照位置塞进会话——Agent 不用"记得去读",一开始就看到了 |
+| Stop | 每轮回复结束 | 有新改动、记忆却没跟上时,提醒 Agent 按「收工」简短记一下;记完就不再提醒,同一会话 30 分钟内最多一次 |
 
-两个脚本都只用 Node.js,找不到 `.agent-memory` 就什么都不做,出错也不会卡住会话。
+三个脚本都只用 Node.js,找不到 `.agent-memory` 就什么都不做,出错也不会卡住会话。
 目前只支持 Claude Code;Codex 等没有同样 hook 的 Agent 用手动方式。
 
 ## 设计来源:照着 Claude 的记忆机制
@@ -133,7 +137,7 @@ skills/os/
 ├── SKILL.md          命令路由 + 铁律
 ├── references/       每个命令一页 + 文件说明
 ├── assets/           状态页、全景、偏好、决定、坑、会话、运维模板 + 两份规矩 + 方向说明页模板
-└── scripts/          init.cjs / tidy.cjs / os-doctor.cjs + 两个可选 hook:precompact-snapshot.cjs / sessionstart-nav.cjs
+└── scripts/          init.cjs / tidy.cjs / os-doctor.cjs + 三个可选 hook:precompact-snapshot.cjs / sessionstart-nav.cjs / stop-remind.cjs
 ```
 
 ## 副作用与安全边界
@@ -141,7 +145,7 @@ skills/os/
 - `init.cjs` 只创建缺失的文件,不覆盖已有内容;在项目根 `CLAUDE.md`、`AGENTS.md` 末尾追加一段指路(`--no-entry` 可跳过),原有内容一个字节都不改。
 - `tidy.cjs` 默认只读;加 `--apply` 才写 `ARCHIVE/`,从不删除文件。
 - `os-doctor.cjs` 只读,退出码始终为 0。
-- 两个 hook 脚本默认不装,不会自动注册;`precompact-snapshot.cjs` 会写入本机路径和 Git 状态,不要把快照提交到公开仓库。
+- 三个 hook 脚本默认不装,不会自动注册;`precompact-snapshot.cjs` 会写入本机路径和 Git 状态,不要把快照提交到公开仓库。
 - 不读取或上传凭据,不访问外部服务,不修改全局 Agent 配置。
 - 旧版的 `INDEX.yaml`、`AGENT_PROTOCOL.md` 仍可读,不会被删除。
 
