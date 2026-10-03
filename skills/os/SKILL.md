@@ -60,7 +60,8 @@ description: >
 ## 平台边界
 
 本 Skill 只依赖 Node.js、Git(使用 Git 项目时)和 Markdown 文件。`scripts/` 下的 `init.cjs`、`tidy.cjs`、
-`os-doctor.cjs`、`precompact-snapshot.cjs` 是可选的本地辅助脚本，不会自动修改全局配置；它们不要求
+`os-doctor.cjs` 和两个可选 hook(`precompact-snapshot.cjs`、`sessionstart-nav.cjs`,默认不装)是本地辅助脚本，
+不会自动修改全局配置；它们不要求
 Claude Code、Codex、特定 IDE 或云服务。若目标环境没有某个平台的 hook、入口文件或 MCP，跳过
 对应检查并报告“未配置”，不要伪造通过。
 

@@ -89,6 +89,34 @@ cp -r project-os/skills/os ~/.agents/skills/      # 通用 Agents(可选)
 | `SESSIONS/` | 目标、完成、问题和解法、遗留、新发现、偏好信号 | 接着干时只读最新 1~2 份 |
 | commit 信 | 改动点、**你拍板了什么**、**为什么这样设计** | git 只记改了什么,不记为什么 |
 
+## Hook(可选,默认关)
+
+不装 hook 也能用:压缩前说一句"收工"(会话中途也行),Agent 会把这次的进展、决定和你的纠正记下来。
+
+想让它自动,把下面这段加进 Claude Code 的 `~/.claude/settings.json`(全局)或项目里的 `.claude/settings.json`,
+路径换成你的 `os` 文件夹位置:
+
+```json
+{
+  "hooks": {
+    "PreCompact": [
+      { "matcher": "auto|manual", "hooks": [{ "type": "command", "command": "node \"C:/Users/you/.claude/skills/os/scripts/precompact-snapshot.cjs\"" }] }
+    ],
+    "SessionStart": [
+      { "matcher": "startup|resume|compact", "hooks": [{ "type": "command", "command": "node \"C:/Users/you/.claude/skills/os/scripts/sessionstart-nav.cjs\"" }] }
+    ]
+  }
+}
+```
+
+| Hook | 什么时候 | 做什么 |
+|---|---|---|
+| PreCompact | 对话压缩前 | 把时间、最近 5 个提交、未提交改动写进 `COMPACT-SNAPSHOT-<分支>.md`——压缩摘要会丢细节,这份只记客观事实 |
+| SessionStart | 新开、恢复、压缩后 | 自动把状态页前 30 行、偏好提醒、压缩快照位置塞进会话——Agent 不用"记得去读",一开始就看到了 |
+
+两个脚本都只用 Node.js,找不到 `.agent-memory` 就什么都不做,出错也不会卡住会话。
+目前只支持 Claude Code;Codex 等没有同样 hook 的 Agent 用手动方式。
+
 ## 设计来源:照着 Claude 的记忆机制
 
 1. **先读一页,再按需读**:像 CLAUDE.md 和记忆索引,入口短、正文用到再读,省 token 也不被旧内容带偏。
@@ -105,7 +133,7 @@ skills/os/
 ├── SKILL.md          命令路由 + 铁律
 ├── references/       每个命令一页 + 文件说明
 ├── assets/           状态页、全景、偏好、决定、坑、会话、运维模板 + 两份规矩 + 方向说明页模板
-└── scripts/          init.cjs / tidy.cjs / os-doctor.cjs / precompact-snapshot.cjs
+└── scripts/          init.cjs / tidy.cjs / os-doctor.cjs + 两个可选 hook:precompact-snapshot.cjs / sessionstart-nav.cjs
 ```
 
 ## 副作用与安全边界
@@ -113,7 +141,7 @@ skills/os/
 - `init.cjs` 只创建缺失的文件,不覆盖已有内容;在项目根 `CLAUDE.md`、`AGENTS.md` 末尾追加一段指路(`--no-entry` 可跳过),原有内容一个字节都不改。
 - `tidy.cjs` 默认只读;加 `--apply` 才写 `ARCHIVE/`,从不删除文件。
 - `os-doctor.cjs` 只读,退出码始终为 0。
-- `precompact-snapshot.cjs` 会写入本机路径和 Git 状态,不要把快照提交到公开仓库。不会自动注册 hook。
+- 两个 hook 脚本默认不装,不会自动注册;`precompact-snapshot.cjs` 会写入本机路径和 Git 状态,不要把快照提交到公开仓库。
 - 不读取或上传凭据,不访问外部服务,不修改全局 Agent 配置。
 - 旧版的 `INDEX.yaml`、`AGENT_PROTOCOL.md` 仍可读,不会被删除。
 
