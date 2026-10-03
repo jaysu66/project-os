@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// tidy.cjs — project-memory 整理:列出该归档的会话、该升级的坑、STATE 新鲜度。
+// tidy.cjs — /os 整理:列出该归档的会话、该升级的坑、STATE 新鲜度。
 // 用法:node <skill>/scripts/tidy.cjs [--apply]   (在项目根执行)
 //   默认只读,只打印计划;--apply 才把 30 天前的会话各追加一行到 ARCHIVE/YYYY-QN.md。从不删除任何文件。
 'use strict';
@@ -21,7 +21,7 @@ function locate() {
   return path.join(cwd, '.agent-memory');
 }
 const mem = locate();
-if (!fs.existsSync(mem)) { console.log('没有 .agent-memory/,先说"初始化项目记忆"。'); process.exit(0); }
+if (!fs.existsSync(mem)) { console.log('没有 .agent-memory/,先说"/os 接入"。'); process.exit(0); }
 const read = f => { try { return fs.readFileSync(path.join(mem, f), 'utf8'); } catch (_) { return ''; } };
 const days = d => Math.floor((Date.now() - new Date(d + 'T00:00:00').getTime()) / DAY);
 const out = [];
@@ -63,7 +63,7 @@ out.push(`③ 决定:有效 ${dBlocks.length - over} 条,已推翻 ${over} 条`)
 // ④ STATE 新鲜度
 const s = read('PROJECT-STATE.md');
 const sd = (s.split(/\r?\n/).slice(0, 8).join('\n').match(/\d{4}-\d{2}-\d{2}/) || [])[0];
-if (!s) out.push('④ 没有 PROJECT-STATE.md' + (read('INDEX.yaml') ? '(有旧版 INDEX.yaml,可说"初始化"升级)' : ''));
+if (!s) out.push('④ 没有 PROJECT-STATE.md' + (read('INDEX.yaml') ? '(有旧版 INDEX.yaml,可说"/os 接入"升级)' : ''));
 else if (!sd) out.push('④ PROJECT-STATE.md 顶部没有更新日期');
 else out.push(`④ PROJECT-STATE.md 上次更新 ${sd}(${days(sd)} 天前)${days(sd) > 7 ? ' ⚠️ 超过 7 天,建议刷新' : ''}`);
 

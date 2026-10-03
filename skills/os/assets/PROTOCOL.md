@@ -1,4 +1,4 @@
-# PROTOCOL — 记忆读写规矩(project-memory)
+# PROTOCOL — 记忆读写规矩(os)
 
 > 用户可以改这页;Agent 不改。
 

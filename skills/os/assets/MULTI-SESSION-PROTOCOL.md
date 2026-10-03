@@ -38,7 +38,7 @@ main 收割时读全部 commits/*.md 汇总进 STATE,汇总过的条目移入文
 
 | 内容 | 写哪 |
 |---|---|
-| 项目事实/决策/状态/交接 | `.agent-memory/`(SSOT,进 git;写法按 project-memory:STATE / CONTEXT / DECISIONS / GOTCHAS / SESSIONS) |
+| 项目事实/决策/状态/交接 | `.agent-memory/`(SSOT,进 git;写法见 PROTOCOL.md:STATE / CONTEXT / DECISIONS / GOTCHAS / SESSIONS) |
 | 只对本项目有效的用户偏好 | `.agent-memory/PREFERENCES.md`(只追加,带日期和出处) |
 | 方向进展 | 自己的 charter「进展日志」 |
 | 跨项目的个人偏好/教训 | 宿主提供的全局记忆桶(若有),照旧 |
@@ -46,7 +46,7 @@ main 收割时读全部 commits/*.md 汇总进 STATE,汇总过的条目移入文
 
 ## 四、压缩防护(已固定化,不用再嘱咐)
 
-- **可选 PreCompact hook**：若宿主支持生命周期 hook，可调用 project-memory 的 `scripts/precompact-snapshot.cjs`，
+- **可选 PreCompact hook**：若宿主支持生命周期 hook，可调用本 Skill 的 `scripts/precompact-snapshot.cjs`，
   把 git log/status/时间戳写进 SSOT；本包不会自动注册 hook。
 - 会话启动导航由宿主自行配置；没有 SessionStart hook 时按 `PROJECT-STATE.md` 手动归位。
 - hook 仅依赖 Node.js 和 Git，失败应 fail-soft，不阻塞宿主会话。

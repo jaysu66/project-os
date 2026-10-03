@@ -67,15 +67,15 @@ if (ssot) {
   }
 }
 
-// ⑤ 记忆层(project-memory):必建文件 + 旧版 INDEX.yaml
+// ⑤ 记忆文件:必建文件 + 旧版 INDEX.yaml
 const memDir = ssot || path.join(cwd, '.agent-memory');
 if (fs.existsSync(memDir)) {
   const missing = ['PROJECT-STATE.md', 'CONTEXT.md', 'PROTOCOL.md'].filter(f => !fs.existsSync(path.join(memDir, f)));
-  if (missing.length) ok('记忆层缺 ' + missing.join('、') + '(可选:说"初始化项目记忆"补齐,不覆盖已有文件)');
-  else ok('记忆层必建文件齐全');
+  if (missing.length) ok('记忆文件缺 ' + missing.join('、') + '(可选:说"/os 接入"补齐,不覆盖已有文件)');
+  else ok('记忆必建文件齐全');
   if (fs.existsSync(path.join(memDir, 'INDEX.yaml'))) {
     if (fs.existsSync(path.join(memDir, 'PROJECT-STATE.md'))) ok('旧版 INDEX.yaml 仍在,以 PROJECT-STATE.md 为准(INDEX.yaml 不用删)');
-    else bad('只有旧版 INDEX.yaml、没有 PROJECT-STATE.md:说"初始化项目记忆"按提示迁移');
+    else bad('只有旧版 INDEX.yaml、没有 PROJECT-STATE.md:说"/os 接入"按提示迁移');
   }
 }
 
